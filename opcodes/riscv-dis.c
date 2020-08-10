@@ -43,6 +43,7 @@ struct riscv_private_data
 
 static const char * const *riscv_gpr_names;
 static const char * const *riscv_fpr_names;
+static const char * const *riscv_qpr_names;   // For Quantum
 
 /* Other options.  */
 static int no_aliases;	/* If set disassemble as most general inst.  */
@@ -52,6 +53,7 @@ set_default_riscv_dis_options (void)
 {
   riscv_gpr_names = riscv_gpr_names_abi;
   riscv_fpr_names = riscv_fpr_names_abi;
+  riscv_qpr_names = riscv_qpr_names_abi;    // For Quantum
   no_aliases = 0;
 }
 
@@ -64,6 +66,7 @@ parse_riscv_dis_option_without_args (const char *option)
     {
       riscv_gpr_names = riscv_gpr_names_numeric;
       riscv_fpr_names = riscv_fpr_names_numeric;
+      riscv_qpr_names = riscv_qpr_names_numeric;  // For Quantum
     }
   else
     return FALSE;
@@ -154,7 +157,8 @@ maybe_print_address (struct riscv_private_data *pd, int base_reg, int offset)
 /* Print insn arguments for 32/64-bit code.  */
 
 static void
-print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
+//print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
+print_insn_args_q (const char *d, insn_t l, struct riscv_opcode *op, bfd_vma pc, disassemble_info *info)
 {
   struct riscv_private_data *pd = info->private_data;
   int rs1 = (l >> OP_SH_RS1) & OP_MASK_RS1;
@@ -401,6 +405,27 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	  print (info->stream, "%d", rs1);
 	  break;
 
+  case 'k': /* Quantum K extension */
+	  switch (*++d)
+	  {
+    case 'D':
+      if ((op->match_func) (op, MATCH_QMEAS_K))
+          print (info->stream, "%s", riscv_gpr_names[rd]);
+      else
+          print (info->stream, "%s", riscv_qpr_names[rd]);
+      break;
+    case 'S':
+      print (info->stream, "%s", riscv_qpr_names[rs1]);
+      break;
+    case 'T':
+      print (info->stream, "%s",
+             riscv_qpr_names[EXTRACT_OPERAND (RS2, l)]);
+      break;
+    case 'u':
+      print (info->stream, "%d", (unsigned)EXTRACT_KTYPE_QIMM (l));
+      break;
+    }
+      break;
 	default:
 	  /* xgettext:c-format */
 	  print (info->stream, _("# internal error, undefined modifier (%c)"),
@@ -499,7 +524,7 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
 
 	  /* It's a match.  */
 	  (*info->fprintf_func) (info->stream, "%s", op->name);
-	  print_insn_args (op->args, word, memaddr, info);
+	  print_insn_args_q (op->args, word, op, memaddr, info);
 
 	  /* Try to disassemble multi-instruction addressing sequences.  */
 	  if (pd->print_addr != (bfd_vma)-1)

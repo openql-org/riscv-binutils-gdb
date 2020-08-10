@@ -234,6 +234,7 @@ riscv_multi_subset_supports (enum riscv_insn_class insn_class)
       return riscv_subset_supports ("f") && riscv_subset_supports ("c");
 
     case INSN_CLASS_Q: return riscv_subset_supports ("q");
+    case INSN_CLASS_K: return riscv_subset_supports ("k");  // For K quantum extension
 
     default:
       as_fatal ("Unreachable");
@@ -992,6 +993,21 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 		      c, opc->name, opc->args);
 	     return FALSE;
 	  }
+    case 'k': /* Quantum k-extension */
+  switch (c = *p++)
+    {
+      // TODO : RD parameter must change when qmeas.k(normal registor value).
+	    //        now this parameter look only quantum registor.
+      case 'D':	USE_BITS (OP_MASK_RD, OP_SH_RD);	break;
+      case 'S':	USE_BITS (OP_MASK_RS1, OP_SH_RS1);	break;
+      case 'T':	USE_BITS (OP_MASK_RS2, OP_SH_RS2);	break;
+      case 'u':	used_bits |= ENCODE_KTYPE_QIMM (-1U);   break;
+      default:
+	      as_bad (_("internal: bad RISC-V opcode"
+			" (unknown operand type `K%c'): %s %s"),
+		      c, opc->name, opc->args);
+	     return FALSE;
+    }
 	break;
       default:
 	as_bad (_("internal: bad RISC-V opcode "
@@ -1079,6 +1095,8 @@ md_begin (void)
   hash_reg_names (RCLASS_GPR, riscv_gpr_names_abi, NGPR);
   hash_reg_names (RCLASS_FPR, riscv_fpr_names_numeric, NFPR);
   hash_reg_names (RCLASS_FPR, riscv_fpr_names_abi, NFPR);
+  hash_reg_names (RCLASS_FPR, riscv_qpr_names_numeric, NFPR); // For Quantum
+  hash_reg_names (RCLASS_FPR, riscv_qpr_names_abi, NFPR); // For Quantum
   /* Add "fp" as an alias for "s0".  */
   hash_reg_name (RCLASS_GPR, "fp", 8);
 
@@ -1881,6 +1899,47 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	      insn_with_csr = FALSE;
 	      goto out;
 
+      case 'k': /* Quantum */
+	      switch (*++args) 
+    {
+		case 'D': /* Floating-point RD .  */
+      /* qmeas.k rd registor */
+      if (!((ip->insn_opcode ^ MATCH_QMEAS_K) & MASK_QMEAS_K)) {
+		    if (!reg_lookup (&s, RCLASS_GPR, &regno)
+		          || !(regno >= 0 && regno <= 31))   /* can't find normal registor */
+                          break;
+		   } else if (!reg_lookup (&s, RCLASS_FPR, &regno)
+		          || !(regno >= 0 && regno <= 31))   /* can't find quantum registor */
+                          break;
+		   INSERT_OPERAND (RD, *ip, regno);
+		   continue;
+		case 'S': /* Floating-point RS1 x8-x15.  */
+		  if (!reg_lookup (&s, RCLASS_FPR, &regno)
+		      || !(regno >= 0 && regno <= 31))
+		    break;
+	    INSERT_OPERAND (RS1, *ip, regno);
+		  continue;
+		case 'T': /* Floating-point RS2.  */
+		  if (!reg_lookup (&s, RCLASS_FPR, &regno))
+		    break;
+		  INSERT_OPERAND (RS2, *ip, regno);
+		  continue;
+		case 'u': /* CUSTOM_IMM  */
+      /* for qmeas.k high bits */
+      if (!((ip->insn_opcode ^ MATCH_QMEAS_K) & MASK_QMEAS_K)) {
+          INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
+          ip->insn_opcode |= MATCH_QMEAS_K;
+      /* for qtocx.k high bits */
+		  } else if (!((ip->insn_opcode ^ MATCH_QTOCX_K) & MASK_QTOCX_K)) {
+          INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
+          ip->insn_opcode |= MATCH_QTOCX_K;
+      } else
+          INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
+      s += strlen (s);
+		  continue;
+    }
+	      break;
+        
 	    case 'C': /* RVC */
 	      switch (*++args)
 		{

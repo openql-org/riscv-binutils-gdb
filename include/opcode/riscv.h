@@ -100,6 +100,14 @@ static const char * const riscv_pred_succ[16] =
 #define EXTRACT_RVC_J_IMM(x) \
   ((RV_X(x, 3, 3) << 1) | (RV_X(x, 11, 1) << 4) | (RV_X(x, 2, 1) << 5) | (RV_X(x, 7, 1) << 6) | (RV_X(x, 6, 1) << 7) | (RV_X(x, 9, 2) << 8) | (RV_X(x, 8, 1) << 10) | (-RV_X(x, 12, 1) << 11))
 
+#define EXTRACT_KTYPE_QIMM(x) \
+  (RV_X(x, 25, 6))
+#define ENCODE_KTYPE_QIMM(x) \
+  (RV_X(x, 0, 6) << 25)
+#define VALID_KTYPE_QIMM(x) (EXTRACT_KTYPE_QIMM(ENCODE_KTYPE_QIMM(x)) == (x))
+#define RISCV_KTYPE(insn, rd, rs1, rs2, qimm) \
+  ((MATCH_ ## insn) | ((rd) << OP_SH_RD) | ((rs1) << OP_SH_RS1) | ((rs2) << OP_SH_RS2) | ENCODE_KTYPE_QIMM(qimm))
+
 #define ENCODE_ITYPE_IMM(x) \
   (RV_X(x, 0, 12) << 20)
 #define ENCODE_STYPE_IMM(x) \
@@ -309,6 +317,7 @@ enum riscv_insn_class
    INSN_CLASS_D_AND_C,
    INSN_CLASS_F_AND_C,
    INSN_CLASS_Q,
+   INSN_CLASS_K
   };
 
 /* This structure holds information for a particular instruction.  */
@@ -484,6 +493,9 @@ extern const char * const riscv_gpr_names_numeric[NGPR];
 extern const char * const riscv_gpr_names_abi[NGPR];
 extern const char * const riscv_fpr_names_numeric[NFPR];
 extern const char * const riscv_fpr_names_abi[NFPR];
+
+extern const char * const riscv_qpr_names_numeric[NFPR];  // For Quantum
+extern const char * const riscv_qpr_names_abi[NFPR];  // For Quantum
 
 extern const struct riscv_opcode riscv_opcodes[];
 extern const struct riscv_opcode riscv_insn_types[];
