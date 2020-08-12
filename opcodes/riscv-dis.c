@@ -158,7 +158,7 @@ maybe_print_address (struct riscv_private_data *pd, int base_reg, int offset)
 
 static void
 //print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
-print_insn_args_q (const char *d, insn_t l, struct riscv_opcode *op, bfd_vma pc, disassemble_info *info)
+print_insn_args_q (const char *d, insn_t l, const struct riscv_opcode *op, bfd_vma pc, disassemble_info *info)
 {
   struct riscv_private_data *pd = info->private_data;
   int rs1 = (l >> OP_SH_RS1) & OP_MASK_RS1;

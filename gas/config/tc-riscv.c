@@ -993,6 +993,7 @@ validate_riscv_insn (const struct riscv_opcode *opc, int length)
 		      c, opc->name, opc->args);
 	     return FALSE;
 	  }
+	break;
     case 'k': /* Quantum k-extension */
   switch (c = *p++)
     {

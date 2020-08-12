@@ -1095,7 +1095,8 @@ riscv_parsing_subset_version (riscv_parse_subset_t *rps,
 const char *
 riscv_supported_std_ext (void)
 {
-  return "mafdqlcbjtpvn";
+  // return "mafdqlcbjtpvn";
+  return "mafdqlkcbjtpvn";
 }
 
 /* Parsing function for standard extensions.
