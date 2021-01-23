@@ -69,6 +69,21 @@ const char * const riscv_vecm_names_numeric[NVECM] =
   "v0.t"
 };
 
+const char * const riscv_qpr_names_numeric[NFPR] =
+{
+  "q0",   "q1",   "q2",   "q3",   "q4",   "q5",   "q6",   "q7",
+  "q8",   "q9",   "q10",  "q11",  "q12",  "q13",  "q14",  "q15",
+  "q16",  "q17",  "q18",  "q19",  "q20",  "q21",  "q22",  "q23",
+  "q24",  "q25",  "q26",  "q27",  "q28",  "q29",  "q30",  "q31"
+};
+
+const char * const riscv_qpr_names_abi[NFPR] = {
+  "qzero", "qt1", "qt2",  "qt3",  "qt4", "qt5", "qt6",  "qt7",
+  "qs0", "qs1", "qa0",  "qa1",  "qa2", "qa3", "qa4",  "qa5",
+  "qa6", "qa7", "qs2",  "qs3",  "qs4", "qs5", "qs6",  "qs7",
+  "qs8", "qs9", "qs10", "qs11", "qt8", "qt9", "qt10", "qt11"
+};
+
 /* The order of overloaded instructions matters.  Label arguments and
    register arguments look the same. Instructions that can have either
    for arguments must apear in the correct order in this table for the

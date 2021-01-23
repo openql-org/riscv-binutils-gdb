@@ -127,6 +127,9 @@ static const char * const riscv_vediv[4] =
 #define EXTRACT_RVV_VC_IMM(x) \
   (RV_X(x, 20, 11))
 
+#define EXTRACT_KTYPE_QIMM(x) \
+  (RV_X(x, 25, 6))
+
 #define ENCODE_ITYPE_IMM(x) \
   (RV_X(x, 0, 12) << 20)
 #define ENCODE_STYPE_IMM(x) \
@@ -168,6 +171,9 @@ static const char * const riscv_vediv[4] =
 #define ENCODE_RVV_VC_IMM(x) \
   (RV_X(x, 0, 11) << 20)
 
+#define ENCODE_KTYPE_QIMM(x) \
+  (RV_X(x, 0, 6) << 25)
+  
 #define VALID_ITYPE_IMM(x) (EXTRACT_ITYPE_IMM(ENCODE_ITYPE_IMM(x)) == (x))
 #define VALID_STYPE_IMM(x) (EXTRACT_STYPE_IMM(ENCODE_STYPE_IMM(x)) == (x))
 #define VALID_SBTYPE_IMM(x) (EXTRACT_SBTYPE_IMM(ENCODE_SBTYPE_IMM(x)) == (x))
@@ -188,6 +194,8 @@ static const char * const riscv_vediv[4] =
 #define VALID_RVC_B_IMM(x) (EXTRACT_RVC_B_IMM(ENCODE_RVC_B_IMM(x)) == (x))
 #define VALID_RVC_J_IMM(x) (EXTRACT_RVC_J_IMM(ENCODE_RVC_J_IMM(x)) == (x))
 #define VALID_RVV_VC_IMM(x) (EXTRACT_RVV_VC_IMM(ENCODE_RVV_VC_IMM(x)) == (x))
+
+#define VALID_KTYPE_QIMM(x) (EXTRACT_KTYPE_QIMM(ENCODE_KTYPE_QIMM(x)) == (x))
 
 #define RISCV_RTYPE(insn, rd, rs1, rs2) \
   ((MATCH_ ## insn) | ((rd) << OP_SH_RD) | ((rs1) << OP_SH_RS1) | ((rs2) << OP_SH_RS2))
@@ -483,6 +491,8 @@ extern const char * const riscv_gpr_names_numeric[NGPR];
 extern const char * const riscv_gpr_names_abi[NGPR];
 extern const char * const riscv_fpr_names_numeric[NFPR];
 extern const char * const riscv_fpr_names_abi[NFPR];
+extern const char * const riscv_qpr_names_numeric[NFPR];
+extern const char * const riscv_qpr_names_abi[NFPR];
 extern const char * const riscv_vecr_names_numeric[NVECR];
 extern const char * const riscv_vecm_names_numeric[NVECM];
 
