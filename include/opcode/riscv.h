@@ -210,6 +210,9 @@ static const char * const riscv_vediv[4] =
 #define RISCV_UJTYPE(insn, rd, target) \
   ((MATCH_ ## insn) | ((rd) << OP_SH_RD) | ENCODE_UJTYPE_IMM(target))
 
+#define RISCV_KTYPE(insn, rd, rs1, rs2, qimm) \
+  ((MATCH_ ## insn) | ((rd) << OP_SH_RD) | ((rs1) << OP_SH_RS1) | ((rs2) << OP_SH_RS2) | ENCODE_KTYPE_QIMM(qimm))
+
 #define RISCV_NOP RISCV_ITYPE(ADDI, 0, 0, 0)
 #define RVC_NOP MATCH_C_ADDI
 
@@ -376,6 +379,7 @@ enum riscv_insn_class
    INSN_CLASS_D_AND_C,
    INSN_CLASS_F_AND_C,
    INSN_CLASS_Q,
+   INSN_CLASS_K,
    INSN_CLASS_V,
    INSN_CLASS_V_AND_F,
   };
