@@ -1635,23 +1635,27 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   /* Parse the name of the instruction.  Terminate the string if whitespace
      is found so that hash_find only sees the name part of the string.  */
   for (s = str; *s != '\0'; ++s)
-    if (ISSPACE (*s))
-      {
-	save_c = *s;
-	*s++ = '\0';
-	break;
-      }
+    if (ISSPACE (*s)) {
+		save_c = *s;
+		*s++ = '\0';
+		break;
+	}
+
+// Debug
+//fprintf (stderr, _("opcode : `%s'\n"), str);
 
   insn = (struct riscv_opcode *) hash_find (hash, str);
 
   argsStart = s;
-  for ( ; insn && insn->name && strcmp (insn->name, str) == 0; insn++)
-    {
+  for ( ; insn && insn->name && strcmp (insn->name, str) == 0; insn++) {
+
+// Debug
+//fprintf (stderr, _("name : `%s'\n"), insn->name);
       if ((insn->xlen_requirement != 0) && (xlen != insn->xlen_requirement))
-	continue;
+		continue;
 
       if (!riscv_multi_subset_supports (insn->insn_class))
-	continue;
+		continue;
 
       create_insn (ip, insn);
       argnum = 1;
@@ -1660,70 +1664,77 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
       *imm_reloc = BFD_RELOC_UNUSED;
       p = percent_op_itype;
 
-      for (args = insn->args;; ++args)
-	{
-	  s += strspn (s, " \t");
-	  switch (*args)
-	    {
+      for (args = insn->args;; ++args) {
+		s += strspn (s, " \t");
+//fprintf (stderr, _("     : end start\n"));
+		switch (*args) {
 	    case '\0': 	/* End of args.  */
-	      if (insn->pinfo != INSN_MACRO)
-		{
-		  if (!insn->match_func (insn, ip->insn_opcode,
-					 riscv_opts.check_constraints))
-		    break;
+			if (insn->pinfo != INSN_MACRO) {
+//fprintf (stderr, _("     : %lx\n"), ip->insn_opcode);
+//fprintf (stderr, _("     : %lx\n"), insn->match);
+//fprintf (stderr, _("     : %lx\n"), insn->mask);
+				if (!insn->match_func (insn, ip->insn_opcode,
+							riscv_opts.check_constraints)) {
+//fprintf (stderr, _("     : match_func error\n"));
+					break;
+				}
 
-		  /* For .insn, insn->match and insn->mask are 0.  */
-		  if (riscv_insn_length ((insn->match == 0 && insn->mask == 0)
-					 ? ip->insn_opcode
-					 : insn->match) == 2
-		      && !riscv_opts.rvc)
-		    break;
-		}
-	      if (*s != '\0')
-		break;
-	      /* Successful assembly.  */
-	      error = NULL;
-	      goto out;
+				/* For .insn, insn->match and insn->mask are 0.  */
+				if (riscv_insn_length ((insn->match == 0 && insn->mask == 0)
+							? ip->insn_opcode
+							: insn->match) == 2
+					&& !riscv_opts.rvc) {
+//fprintf (stderr, _("     : riscv_insn_length\n"));
+						break;
+					}
+			}
+//fprintf (stderr, _("     : end\n"));
+	    	if (*s != '\0')
+				break;
+		    /* Successful assembly.  */
+	      	error = NULL;
+	      	goto out;
 
 	    case 'k': /* Quantum */
-	      switch (*++args) {
-		case 'D': /* Floating-point RD .  */
-                  /* qmeas.k rd registor */
-                  if (!((ip->insn_opcode ^ MATCH_QMEAS_K) & MASK_QMEAS_K)) {
-		      if (!reg_lookup (&s, RCLASS_GPR, &regno)
-		          || !(regno >= 0 && regno <= 31))   /* can't find normal registor */
-                          break;
-		  } else if (!reg_lookup (&s, RCLASS_FPR, &regno)
-		          || !(regno >= 0 && regno <= 31))   /* can't find quantum registor */
-                          break;
-		  INSERT_OPERAND (RD, *ip, regno);
-		  continue;
-		case 'S': /* Floating-point RS1 x8-x15.  */
-		  if (!reg_lookup (&s, RCLASS_FPR, &regno)
-		      || !(regno >= 0 && regno <= 31))
-		    break;
-	          INSERT_OPERAND (RS1, *ip, regno);
-		  continue;
-		case 'T': /* Floating-point RS2.  */
-		  if (!reg_lookup (&s, RCLASS_FPR, &regno))
-		    break;
-		  INSERT_OPERAND (RS2, *ip, regno);
-		  continue;
-		case 'u': /* CUSTOM_IMM  */
-                  /* for qmeas.k high bits */
-                  if (!((ip->insn_opcode ^ MATCH_QMEAS_K) & MASK_QMEAS_K)) {
-                      INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
-                      ip->insn_opcode |= MATCH_QMEAS_K;
-                  /* for qtocx.k high bits */
-		  } else if (!((ip->insn_opcode ^ MATCH_QTOCX_K) & MASK_QTOCX_K)) {
-                      INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
-                      ip->insn_opcode |= MATCH_QTOCX_K;
-                  } else
-                      INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
-                  s += strlen (s);
-		  continue;
+
+			switch (*++args) {
+				case 'D': /* Floating-point RD .  */
+        		          /* qmeas.k rd registor */
+					if (!((ip->insn_opcode ^ MATCH_QMEAS_K) & MASK_QMEAS_K)) {
+							if (!reg_lookup (&s, RCLASS_GPR, &regno)
+								|| !(regno >= 0 && regno <= 31))   /* can't find normal registor */
+							break;
+					} else if (!reg_lookup (&s, RCLASS_FPR, &regno)
+								|| !(regno >= 0 && regno <= 31))   /* can't find quantum registor */
+							break;
+					INSERT_OPERAND (RD, *ip, regno);
+					continue;
+				case 'S': /* Floating-point RS1 x8-x15.  */
+					if (!reg_lookup (&s, RCLASS_FPR, &regno)
+						|| !(regno >= 0 && regno <= 31))
+						break;
+					INSERT_OPERAND (RS1, *ip, regno);
+					continue;
+				case 'T': /* Floating-point RS2.  */
+					if (!reg_lookup (&s, RCLASS_FPR, &regno))
+						break;
+					INSERT_OPERAND (RS2, *ip, regno);
+					continue;
+				case 'u': /* CUSTOM_IMM  */
+						/* for qmeas.k high bits */
+						if (!((ip->insn_opcode ^ MATCH_QMEAS_K) & MASK_QMEAS_K)) {
+							INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
+							ip->insn_opcode |= MATCH_QMEAS_K;
+						/* for qtocx.k high bits */
+						} else if (!((ip->insn_opcode ^ MATCH_QTOCX_K) & MASK_QTOCX_K)) {
+									INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
+									ip->insn_opcode |= MATCH_QTOCX_K;
+						} else
+							INSERT_OPERAND (CUSTOM_IMM, *ip, atoi(s));
+						s += strlen (s);
+						continue;
               }
-	      break;
+		      break;
 		  
 	    case 'C': /* RVC */
 	      switch (*++args)
